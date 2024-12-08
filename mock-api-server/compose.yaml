@@ -1,0 +1,44 @@
+services:
+  tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.tests
+    container_name: tests-server
+    depends_on:
+      api-mock:
+        condition: service_started
+      mock-database:
+        condition: service_started
+    environment:
+      - REQUESTS_CA_BUNDLE=/root/ca/rsa/volumed_dir/full-chain.cert.pem
+    working_dir: /opt/project
+    volumes:
+      - ./tests:/opt/project/tests
+      - api_mock_certs:/root/ca/rsa/volumed_dir
+    entrypoint: ["python3", "-m", "pytest"]
+    # entrypoint: ["tail", "-f", "/dev/null"]
+  api-mock:
+    build: .
+    container_name: api-mock-server
+    restart: always
+    volumes:
+      - api_mock_certs:/root/ca/rsa/volumed_dir
+    ports:
+      - "8080:80"
+      - "8443:443"
+
+  mock-database:
+    image: postgres:latest
+    container_name: mock-db-server
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mockdb
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+
+volumes:
+  api_mock_certs:

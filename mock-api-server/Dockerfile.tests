@@ -1,0 +1,23 @@
+FROM python:3.11-slim
+USER root
+WORKDIR /opt/project
+
+# Install any system dependencies that might be needed
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    gcc \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY . /opt/project
+# COPY requirements.txt .
+RUN pip install --no-cache-dir -r tests/requirements.txt
+
+ENTRYPOINT ["sh", "-c", "pytest tests/*"]
+
+# FROM python:3.8
+# WORKDIR /opt/project
+# COPY . /opt/project
+# RUN pip install -r tests/requirements.txt
+# # CMD ["sh", "-c", "pytest -s test_login.py --env=stag && pytest -s test_send_ecard.py --env=stag"]
+# CMD ["sh", "-c", "pytest tests/*"]
